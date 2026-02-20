@@ -6,11 +6,6 @@
     "name": "Beau Gunderson"
   },
   "license": "MIT",
-  "keywords": [
-    "iterm",
-    "iterm2",
-    "tab-color",
-    "terminal"
-  ],
+  "keywords": ["iterm", "iterm2", "tab-color", "terminal"],
   "hooks": "./hooks/hooks.json"
 }

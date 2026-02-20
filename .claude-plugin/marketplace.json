@@ -1,12 +1,12 @@
 {
-  "name": "beaugunderson-claude-iterm-tab-color",
+  "name": "beaugunderson-claude-plugins",
   "owner": {
     "name": "Beau Gunderson"
   },
   "plugins": [
     {
       "name": "iterm-tab-color",
-      "source": ".",
+      "source": "./iterm-tab-color",
       "description": "iTerm2 tab colors for Claude Code — green when working, yellow when waiting for you",
       "version": "1.0.0"
     }
