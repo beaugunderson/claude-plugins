@@ -1,7 +1,6 @@
 {
   "name": "iterm-tab-color",
   "description": "iTerm2 tab colors for Claude Code — green when working, yellow when waiting for you",
-  "version": "1.0.2",
   "author": {
     "name": "Beau Gunderson"
   },
