@@ -29,10 +29,10 @@ case "$EVENT" in
   PermissionRequest)
     touch "$APPROVAL_FLAG"
     R=200 G=160 B=40; STATUS="approval" ;;
-  UserPromptSubmit)
+  UserPromptSubmit|PreToolUse)
     rm -f "$APPROVAL_FLAG"
     R=60  G=140 B=70; STATUS="working"  ;;
-  PostToolUse)
+  PostToolUse|Notification)
     if [ -f "$APPROVAL_FLAG" ]; then
       R=200 G=160 B=40; STATUS="approval"
     else

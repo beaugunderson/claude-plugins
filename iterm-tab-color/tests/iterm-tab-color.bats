@@ -75,6 +75,39 @@ run_hook() {
   [[ "$output" == *"working"* ]]
 }
 
+@test "PreToolUse sets green and working" {
+  run_hook "PreToolUse"
+  output="$(cat "$TTY_OUT")"
+  [[ "$output" == *"red;brightness;60"* ]]
+  [[ "$output" == *"working"* ]]
+}
+
+@test "PreToolUse clears approval flag" {
+  run_hook "PermissionRequest"
+  [ -f "$APPROVAL_FLAG" ]
+  : > "$TTY_OUT"
+  run_hook "PreToolUse"
+  [ ! -f "$APPROVAL_FLAG" ]
+  output="$(cat "$TTY_OUT")"
+  [[ "$output" == *"working"* ]]
+}
+
+@test "Notification without approval stays green" {
+  run_hook "Notification"
+  output="$(cat "$TTY_OUT")"
+  [[ "$output" == *"red;brightness;60"* ]]
+  [[ "$output" == *"working"* ]]
+}
+
+@test "Notification during approval stays yellow" {
+  run_hook "PermissionRequest"
+  : > "$TTY_OUT"
+  run_hook "Notification"
+  output="$(cat "$TTY_OUT")"
+  [[ "$output" == *"red;brightness;200"* ]]
+  [[ "$output" == *"approval"* ]]
+}
+
 @test "Stop clears approval flag and sets done" {
   run_hook "PermissionRequest"
   : > "$TTY_OUT"
