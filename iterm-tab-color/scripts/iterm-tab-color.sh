@@ -47,12 +47,14 @@ case "$EVENT" in
   UserPromptSubmit)
     rm -f "$APPROVAL_FLAG"
     R=60  G=140 B=70; STATUS="working"  ;;
-  PostToolUse|Notification)
+  PostToolUse)
     if [ -f "$APPROVAL_FLAG" ]; then
       R=200 G=160 B=40; STATUS="approval"
     else
       R=60  G=140 B=70; STATUS="working"
     fi ;;
+  Notification)
+    R=200 G=160 B=40; STATUS="done"     ;;
   Stop)
     rm -f "$APPROVAL_FLAG"
     R=200 G=160 B=40; STATUS="done"     ;;

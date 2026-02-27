@@ -75,20 +75,20 @@ run_hook() {
   [[ "$output" == *"working"* ]]
 }
 
-@test "Notification without approval stays green" {
+@test "Notification always sets yellow (done)" {
   run_hook "Notification"
   output="$(cat "$TTY_OUT")"
-  [[ "$output" == *"red;brightness;60"* ]]
-  [[ "$output" == *"working"* ]]
+  [[ "$output" == *"red;brightness;200"* ]]
+  [[ "$output" == *"done"* ]]
 }
 
-@test "Notification during approval stays yellow" {
-  run_hook "PermissionRequest"
+@test "Notification after Stop stays yellow" {
+  run_hook "Stop"
   : > "$TTY_OUT"
   run_hook "Notification"
   output="$(cat "$TTY_OUT")"
   [[ "$output" == *"red;brightness;200"* ]]
-  [[ "$output" == *"approval"* ]]
+  [[ "$output" == *"done"* ]]
 }
 
 @test "Stop clears approval flag and sets done" {
