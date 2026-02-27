@@ -9,6 +9,7 @@ INPUT=$(cat)
 EVENT=$(echo "$INPUT" | grep -o '"hook_event_name":"[^"]*"' | cut -d'"' -f4)
 CWD=$(echo "$INPUT" | grep -o '"cwd":"[^"]*"' | cut -d'"' -f4)
 TOOL=$(echo "$INPUT" | grep -o '"tool_name":"[^"]*"' | cut -d'"' -f4)
+SESSION_ID=$(echo "$INPUT" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4)
 PROJECT="${CWD##*/}"
 PROJECT="${PROJECT:-claude}"
 
@@ -16,8 +17,8 @@ PROJECT="${PROJECT:-claude}"
 TTY="${ITERM_TAB_COLOR_TTY:-/dev/tty}"
 
 # State file so "approval" persists across PostToolUse events from sub-agents.
-# PPID is the claude process — shared across all hook invocations in one session.
-APPROVAL_FLAG="${ITERM_TAB_COLOR_APPROVAL_FLAG:-/tmp/iterm-tab-color-approval-${PPID}}"
+# session_id is stable across all hook invocations in one session.
+APPROVAL_FLAG="${ITERM_TAB_COLOR_APPROVAL_FLAG:-/tmp/iterm-tab-color-approval-${SESSION_ID}}"
 
 # Debug logging — set ITERM_TAB_COLOR_DEBUG=1 to enable
 DEBUG_LOG="${ITERM_TAB_COLOR_DEBUG_LOG:-/tmp/iterm-tab-color-debug.log}"
@@ -25,9 +26,9 @@ debug() {
   [[ "${ITERM_TAB_COLOR_DEBUG:-}" == "1" ]] || return 0
   local approval_exists="no"
   [[ -f "$APPROVAL_FLAG" ]] && approval_exists="yes"
-  printf "%s ppid=%-6s event=%-20s tool=%-20s approval_flag=%s → %s (%s)\n" \
+  printf "%s sid=%-8s event=%-20s tool=%-20s approval_flag=%s → %s (%s)\n" \
     "$(date '+%H:%M:%S.%3N' 2>/dev/null || date '+%H:%M:%S')" \
-    "$PPID" "$EVENT" "${TOOL:-—}" "$approval_exists" "$STATUS" "$1" \
+    "${SESSION_ID:0:8}" "$EVENT" "${TOOL:-—}" "$approval_exists" "$STATUS" "$1" \
     >> "$DEBUG_LOG" 2>/dev/null || true
 }
 
