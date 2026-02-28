@@ -17,7 +17,7 @@ teardown() {
 run_hook() {
   local event="$1"
   local cwd="${2:-/home/user/my-project}"
-  echo "{\"hook_event_name\":\"${event}\",\"cwd\":\"${cwd}\"}" | bash "$SCRIPT"
+  echo "{\"hook_event_name\":\"${event}\",\"cwd\":\"${cwd}\",\"session_id\":\"TESTING\"}" | bash "$SCRIPT"
 }
 
 # --- Tests ---
@@ -47,14 +47,15 @@ run_hook() {
   [ -f "$APPROVAL_FLAG" ]
 }
 
-@test "PostToolUse after PermissionRequest stays yellow" {
+@test "PostToolUse after PermissionRequest clears flag and goes green" {
   run_hook "PermissionRequest"
+  [ -f "$APPROVAL_FLAG" ]
   : > "$TTY_OUT"
   run_hook "PostToolUse"
   output="$(cat "$TTY_OUT")"
-  [[ "$output" == *"red;brightness;200"* ]]
-  [[ "$output" == *"approval"* ]]
-  [ -f "$APPROVAL_FLAG" ]
+  [[ "$output" == *"red;brightness;60"* ]]
+  [[ "$output" == *"working"* ]]
+  [ ! -f "$APPROVAL_FLAG" ]
 }
 
 @test "PostToolUse without pending approval sets green" {
