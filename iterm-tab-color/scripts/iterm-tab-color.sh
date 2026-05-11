@@ -28,8 +28,23 @@ SESSION_ID=$(echo "$INPUT" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4)
 PROJECT="${CWD##*/}"
 PROJECT="${PROJECT:-claude}"
 
-# Output target — overridable for testing
-TTY="${ITERM_TAB_COLOR_TTY:-/dev/tty}"
+# Output target — overridable for testing.
+# Claude Code spawns hooks without a controlling terminal, so /dev/tty fails
+# silently. Walk up the process tree to find an ancestor with a real TTY.
+find_tty() {
+  local pid=$PPID
+  while [[ -n "$pid" && "$pid" != "0" && "$pid" != "1" ]]; do
+    local t
+    t=$(ps -o tty= -p "$pid" 2>/dev/null | tr -d ' ')
+    if [[ -n "$t" && "$t" != "?"* ]]; then
+      printf "/dev/%s" "$t"
+      return 0
+    fi
+    pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+  done
+  printf "/dev/tty"
+}
+TTY="${ITERM_TAB_COLOR_TTY:-$(find_tty)}"
 
 # State file so "approval" persists across PostToolUse events from sub-agents.
 # session_id is stable across all hook invocations in one session.
