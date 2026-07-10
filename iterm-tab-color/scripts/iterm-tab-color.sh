@@ -27,6 +27,8 @@ PROMPT=$(echo "$INPUT" | grep -o '"prompt":"[^"]*"' | cut -d'"' -f4)
 SESSION_ID=$(echo "$INPUT" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4)
 PROJECT="${CWD##*/}"
 PROJECT="${PROJECT:-claude}"
+# Home directory shows as ~ rather than the literal folder name
+[[ "$CWD" == "$HOME" ]] && PROJECT="~"
 
 # Output target — overridable for testing.
 # Claude Code spawns hooks without a controlling terminal, so /dev/tty fails
@@ -114,4 +116,4 @@ debug "$( [[ "$R" -eq 60 ]] && echo green || echo yellow )"
 osc "6;1;bg;red;brightness;$R"
 osc "6;1;bg;green;brightness;$G"
 osc "6;1;bg;blue;brightness;$B"
-osc "0;$PROJECT: $STATUS"
+osc "0;$PROJECT"
