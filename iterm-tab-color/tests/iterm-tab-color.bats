@@ -4,6 +4,8 @@ SCRIPT="$BATS_TEST_DIRNAME/../scripts/iterm-tab-color.sh"
 
 setup() {
   export TERM_PROGRAM="iTerm.app"
+  # Default to the work palette; personal tests set this explicitly.
+  unset CLAUDE_CONFIG_DIR
   TTY_OUT="$(mktemp)"
   export ITERM_TAB_COLOR_TTY="$TTY_OUT"
   APPROVAL_FLAG="$(mktemp -u)"
@@ -26,6 +28,13 @@ is_green() {
 }
 is_yellow() {
   [[ "$1" == *"red;brightness;200"* ]] && [[ "$1" == *"green;brightness;160"* ]] && [[ "$1" == *"blue;brightness;40"* ]]
+}
+# Personal palette (pc alias → CLAUDE_CONFIG_DIR=~/.claude-personal).
+is_blue() {
+  [[ "$1" == *"red;brightness;60"* ]] && [[ "$1" == *"green;brightness;110"* ]] && [[ "$1" == *"blue;brightness;210"* ]]
+}
+is_orange() {
+  [[ "$1" == *"red;brightness;230"* ]] && [[ "$1" == *"green;brightness;120"* ]] && [[ "$1" == *"blue;brightness;30"* ]]
 }
 
 # --- Tests ---
@@ -117,4 +126,22 @@ is_yellow() {
   output="$(cat "$TTY_OUT")"
   [[ "$output" == *"0;my-project"* ]]
   [[ "$output" != *"working"* ]]
+}
+
+@test "personal config uses blue while working" {
+  export CLAUDE_CONFIG_DIR="$HOME/.claude-personal"
+  run_hook "UserPromptSubmit"
+  is_blue "$(cat "$TTY_OUT")"
+}
+
+@test "personal config uses orange while waiting" {
+  export CLAUDE_CONFIG_DIR="$HOME/.claude-personal"
+  run_hook "Stop"
+  is_orange "$(cat "$TTY_OUT")"
+}
+
+@test "teams config keeps the work palette" {
+  export CLAUDE_CONFIG_DIR="$HOME/.claude-teams"
+  run_hook "UserPromptSubmit"
+  is_green "$(cat "$TTY_OUT")"
 }

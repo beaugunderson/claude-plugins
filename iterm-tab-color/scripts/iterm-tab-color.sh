@@ -92,26 +92,38 @@ if [ "$EVENT" = "SessionEnd" ]; then
   exit 0
 fi
 
+# Palette is chosen by which Claude config launched the session. The `pc`
+# alias sets CLAUDE_CONFIG_DIR=~/.claude-personal, so personal sessions get a
+# blue/orange pair; every other config (work `c`, teams `tc`) keeps the
+# original green/yellow. Both pairs run calm-while-working → warm-for-attention.
+if [[ "${CLAUDE_CONFIG_DIR:-}" == *personal* ]]; then
+  WORK_R=60  WORK_G=110 WORK_B=210   # blue   = working
+  WAIT_R=230 WAIT_G=120 WAIT_B=30    # orange = waiting
+else
+  WORK_R=60  WORK_G=140 WORK_B=70    # green  = working
+  WAIT_R=200 WAIT_G=160 WAIT_B=40    # yellow = waiting
+fi
+
 case "$EVENT" in
   PermissionRequest)
     touch "$APPROVAL_FLAG"
-    R=200 G=160 B=40; STATUS="approval" ;;
+    R=$WAIT_R G=$WAIT_G B=$WAIT_B; STATUS="approval" ;;
   UserPromptSubmit)
     rm -f "$APPROVAL_FLAG"
-    R=60  G=140 B=70; STATUS="working"  ;;
+    R=$WORK_R G=$WORK_G B=$WORK_B; STATUS="working"  ;;
   PostToolUse)
     rm -f "$APPROVAL_FLAG"
-    R=60  G=140 B=70; STATUS="working"  ;;
+    R=$WORK_R G=$WORK_G B=$WORK_B; STATUS="working"  ;;
   Notification)
-    R=200 G=160 B=40; STATUS="done"     ;;
+    R=$WAIT_R G=$WAIT_G B=$WAIT_B; STATUS="done"     ;;
   Stop)
     rm -f "$APPROVAL_FLAG"
-    R=200 G=160 B=40; STATUS="done"     ;;
+    R=$WAIT_R G=$WAIT_G B=$WAIT_B; STATUS="done"     ;;
   *)
-    R=200 G=160 B=40; STATUS="waiting"  ;;
+    R=$WAIT_R G=$WAIT_G B=$WAIT_B; STATUS="waiting"  ;;
 esac
 
-debug "$( [[ "$R" -eq 60 ]] && echo green || echo yellow )"
+debug "$( [[ "$R" -eq "$WORK_R" ]] && echo working || echo waiting )"
 
 osc "6;1;bg;red;brightness;$R"
 osc "6;1;bg;green;brightness;$G"
