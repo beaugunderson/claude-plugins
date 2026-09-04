@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # iTerm2 tab color + title for Claude Code sessions
-# Green = working, Yellow = waiting for you, Clear on exit
+# Work: blue; personal: green. Dark = idle, bright = working. Clear on exit.
 
 # Detect iTerm — directly or via tmux
 IN_TMUX=0
@@ -93,15 +93,15 @@ if [ "$EVENT" = "SessionEnd" ]; then
 fi
 
 # Palette is chosen by which Claude config launched the session. The `pc`
-# alias sets CLAUDE_CONFIG_DIR=~/.claude-personal, so personal sessions get a
-# blue/orange pair; every other config (work `c`, teams `tc`) keeps the
-# original green/yellow. Both pairs run calm-while-working → warm-for-attention.
+# alias sets CLAUDE_CONFIG_DIR=~/.claude-personal, so personal sessions are
+# green; every other config (work `c`, teams `tc`) is blue. Within each hue,
+# dark means idle/waiting and bright means working.
 if [[ "${CLAUDE_CONFIG_DIR:-}" == *personal* ]]; then
-  WORK_R=60  WORK_G=110 WORK_B=210   # blue   = working
-  WAIT_R=230 WAIT_G=120 WAIT_B=30    # orange = waiting
+  WORK_R=50 WORK_G=184 WORK_B=102  # bright green = working
+  WAIT_R=29 WAIT_G=73  WAIT_B=52   # dark green   = idle
 else
-  WORK_R=60  WORK_G=140 WORK_B=70    # green  = working
-  WAIT_R=200 WAIT_G=160 WAIT_B=40    # yellow = waiting
+  WORK_R=39 WORK_G=136 WORK_B=232  # bright blue = working
+  WAIT_R=24 WAIT_G=59  WAIT_B=91   # dark blue   = idle
 fi
 
 case "$EVENT" in

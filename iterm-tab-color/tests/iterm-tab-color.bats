@@ -23,18 +23,18 @@ run_hook() {
 }
 
 # State is surfaced only through tab color, not the title, so assert on color.
-is_green() {
-  [[ "$1" == *"red;brightness;60"* ]] && [[ "$1" == *"green;brightness;140"* ]] && [[ "$1" == *"blue;brightness;70"* ]]
+is_work_working() {
+  [[ "$1" == *"red;brightness;39"* ]] && [[ "$1" == *"green;brightness;136"* ]] && [[ "$1" == *"blue;brightness;232"* ]]
 }
-is_yellow() {
-  [[ "$1" == *"red;brightness;200"* ]] && [[ "$1" == *"green;brightness;160"* ]] && [[ "$1" == *"blue;brightness;40"* ]]
+is_work_idle() {
+  [[ "$1" == *"red;brightness;24"* ]] && [[ "$1" == *"green;brightness;59"* ]] && [[ "$1" == *"blue;brightness;91"* ]]
 }
 # Personal palette (pc alias → CLAUDE_CONFIG_DIR=~/.claude-personal).
-is_blue() {
-  [[ "$1" == *"red;brightness;60"* ]] && [[ "$1" == *"green;brightness;110"* ]] && [[ "$1" == *"blue;brightness;210"* ]]
+is_personal_working() {
+  [[ "$1" == *"red;brightness;50"* ]] && [[ "$1" == *"green;brightness;184"* ]] && [[ "$1" == *"blue;brightness;102"* ]]
 }
-is_orange() {
-  [[ "$1" == *"red;brightness;230"* ]] && [[ "$1" == *"green;brightness;120"* ]] && [[ "$1" == *"blue;brightness;30"* ]]
+is_personal_idle() {
+  [[ "$1" == *"red;brightness;29"* ]] && [[ "$1" == *"green;brightness;73"* ]] && [[ "$1" == *"blue;brightness;52"* ]]
 }
 
 # --- Tests ---
@@ -45,29 +45,29 @@ is_orange() {
   [ ! -s "$TTY_OUT" ]
 }
 
-@test "UserPromptSubmit sets green" {
+@test "UserPromptSubmit sets work tab to bright blue" {
   run_hook "UserPromptSubmit"
-  is_green "$(cat "$TTY_OUT")"
+  is_work_working "$(cat "$TTY_OUT")"
 }
 
-@test "PermissionRequest sets yellow and creates approval flag" {
+@test "PermissionRequest sets work tab to dark blue and creates approval flag" {
   run_hook "PermissionRequest"
-  is_yellow "$(cat "$TTY_OUT")"
+  is_work_idle "$(cat "$TTY_OUT")"
   [ -f "$APPROVAL_FLAG" ]
 }
 
-@test "PostToolUse after PermissionRequest clears flag and goes green" {
+@test "PostToolUse after PermissionRequest clears flag and goes bright blue" {
   run_hook "PermissionRequest"
   [ -f "$APPROVAL_FLAG" ]
   : > "$TTY_OUT"
   run_hook "PostToolUse"
-  is_green "$(cat "$TTY_OUT")"
+  is_work_working "$(cat "$TTY_OUT")"
   [ ! -f "$APPROVAL_FLAG" ]
 }
 
-@test "PostToolUse without pending approval sets green" {
+@test "PostToolUse without pending approval sets bright blue" {
   run_hook "PostToolUse"
-  is_green "$(cat "$TTY_OUT")"
+  is_work_working "$(cat "$TTY_OUT")"
   [ ! -f "$APPROVAL_FLAG" ]
 }
 
@@ -77,27 +77,27 @@ is_orange() {
   : > "$TTY_OUT"
   run_hook "UserPromptSubmit"
   [ ! -f "$APPROVAL_FLAG" ]
-  is_green "$(cat "$TTY_OUT")"
+  is_work_working "$(cat "$TTY_OUT")"
 }
 
-@test "Notification always sets yellow" {
+@test "Notification always sets dark blue" {
   run_hook "Notification"
-  is_yellow "$(cat "$TTY_OUT")"
+  is_work_idle "$(cat "$TTY_OUT")"
 }
 
-@test "Notification after Stop stays yellow" {
+@test "Notification after Stop stays dark blue" {
   run_hook "Stop"
   : > "$TTY_OUT"
   run_hook "Notification"
-  is_yellow "$(cat "$TTY_OUT")"
+  is_work_idle "$(cat "$TTY_OUT")"
 }
 
-@test "Stop clears approval flag and sets yellow" {
+@test "Stop clears approval flag and sets dark blue" {
   run_hook "PermissionRequest"
   : > "$TTY_OUT"
   run_hook "Stop"
   [ ! -f "$APPROVAL_FLAG" ]
-  is_yellow "$(cat "$TTY_OUT")"
+  is_work_idle "$(cat "$TTY_OUT")"
 }
 
 @test "SessionEnd clears flag and resets colors" {
@@ -128,20 +128,20 @@ is_orange() {
   [[ "$output" != *"working"* ]]
 }
 
-@test "personal config uses blue while working" {
+@test "personal config uses bright green while working" {
   export CLAUDE_CONFIG_DIR="$HOME/.claude-personal"
   run_hook "UserPromptSubmit"
-  is_blue "$(cat "$TTY_OUT")"
+  is_personal_working "$(cat "$TTY_OUT")"
 }
 
-@test "personal config uses orange while waiting" {
+@test "personal config uses dark green while idle" {
   export CLAUDE_CONFIG_DIR="$HOME/.claude-personal"
   run_hook "Stop"
-  is_orange "$(cat "$TTY_OUT")"
+  is_personal_idle "$(cat "$TTY_OUT")"
 }
 
-@test "teams config keeps the work palette" {
+@test "teams config keeps the blue work palette" {
   export CLAUDE_CONFIG_DIR="$HOME/.claude-teams"
   run_hook "UserPromptSubmit"
-  is_green "$(cat "$TTY_OUT")"
+  is_work_working "$(cat "$TTY_OUT")"
 }

@@ -14,9 +14,9 @@ Claude Code plugins by Beau Gunderson.
 
 iTerm2 tab colors and titles for Claude Code sessions.
 
-- **Green** — Claude is working
-- **Yellow** — waiting for you (done, needs approval, waiting for input)
-- **Reset** — tab color and title clear on session end
+- **Work sessions:** dark blue when idle, bright blue when working
+- **Personal sessions:** dark green when idle, bright green when working
+- **Reset:** tab color and title clear on session end
 
 ```
 /plugin install iterm-tab-color
