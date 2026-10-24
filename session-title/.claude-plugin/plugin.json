@@ -1,0 +1,6 @@
+{
+  "name": "session-title",
+  "version": "0.1.0",
+  "description": "Names each new session from its first prompt with a short Haiku-written title, applied on the second prompt. /rename always wins.",
+  "types": "./types/index.d.ts"
+}
