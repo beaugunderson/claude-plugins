@@ -10,38 +10,51 @@ const USAGE = {
   cache_read_input_tokens: 0,
 }
 
-// The engine beneath the plugin: no settings hooks, and Haiku answering `reply`.
-const engine = (on: On, reply: string, asked: string[] = []) => {
+// The engine beneath the plugin: no settings hooks, and Haiku answering `reply`,
+// once `gate` resolves when one is given.
+const engine = (on: On, reply: string, asked: string[] = [], gate?: Promise<void>) => {
   const clock = mock.clock(on)
   on('classic.SessionStart', () => ({}))
   on('classic.UserPromptSubmit', () => ({}))
   on('prompt.submit', (_, e) => ({ text: e.text }))
-  on('model.complete', (_, e) => {
+  on('model.complete', async (_, e) => {
     asked.push(typeof e.prompt === 'string' ? e.prompt : '')
+    if (gate) await gate
     return { value: { isAnswered: true, text: reply, usage: USAGE } }
   })
   return clock
 }
 
-test('the title from the first prompt lands on the second', async ($, on) => {
+test('the title from the first prompt lands on the first prompt', async ($, on) => {
   const asked: string[] = []
   const clock = engine(on, 'Fix flaky login test', asked)
 
   await $.classic.SessionStart({ source: 'startup' })
   const first = await $.classic.UserPromptSubmit({ prompt: 'the login test keeps failing in CI' })
-  expect(first.sessionTitle).toBeUndefined()
-
-  await clock.settle()
+  expect(first.sessionTitle).toBe('fix-flaky-login-test')
   expect(asked.length).toBe(1)
   expect(asked[0]).toContain('the login test keeps failing in CI')
 
-  const second = await $.classic.UserPromptSubmit({ prompt: 'try again' })
-  expect(second.sessionTitle).toBe('fix-flaky-login-test')
-
-  const third = await $.classic.UserPromptSubmit({ prompt: 'thanks' })
+  const second = await $.classic.UserPromptSubmit({ prompt: 'thanks' })
   await clock.settle()
-  expect(third.sessionTitle).toBeUndefined()
+  expect(second.sessionTitle).toBeUndefined()
   expect(asked.length).toBe(1)
+})
+
+test('a title slower than the cap lands on the next prompt', async ($, on) => {
+  let release = () => {}
+  const gate = new Promise<void>(r => (release = r))
+  const clock = engine(on, 'Slow title', [], gate)
+
+  await $.classic.SessionStart({ source: 'startup' })
+  const pending = $.classic.UserPromptSubmit({ prompt: 'do the slow thing' })
+  await clock.advance(2000)
+  expect((await pending).sessionTitle).toBeUndefined()
+
+  release()
+  await clock.settle()
+  const next = await $.classic.UserPromptSubmit({ prompt: 'go on' })
+  expect(next.sessionTitle).toBe('slow-title')
 })
 
 test('a resumed session that has a title is left alone', async ($, on) => {
@@ -57,11 +70,11 @@ test('a resumed session that has a title is left alone', async ($, on) => {
   expect(next.sessionTitle).toBeUndefined()
 })
 
-test('/rename before the title lands wins', async ($, on) => {
-  const clock = engine(on, 'Generated title')
+test('a /rename first wins', async ($, on) => {
+  const asked: string[] = []
+  const clock = engine(on, 'Generated title', asked)
 
   await $.classic.SessionStart({ source: 'startup' })
-  await $.classic.UserPromptSubmit({ prompt: 'build the thing' })
   await $.prompt.submit({
     text: '/rename my name',
     command: { name: 'rename', args: 'my name' },
@@ -72,6 +85,7 @@ test('/rename before the title lands wins', async ($, on) => {
   const next = await $.classic.UserPromptSubmit({ prompt: 'go on' })
 
   expect(next.sessionTitle).toBeUndefined()
+  expect(asked.length).toBe(0)
 })
 
 test('a slash command first prompt does not start a title', async ($, on) => {

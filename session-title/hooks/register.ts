@@ -1,6 +1,7 @@
 // A session title can only be set through a UserPromptSubmit or SessionStart
-// hook result, so the title is written in the background from the first prompt
-// and handed over on the second one, which never waits on the model.
+// hook result, and SessionStart runs before any prompt exists. So the first
+// prompt waits up to WAIT_MS for Haiku's title; a slower answer is kept and
+// handed over on the next prompt.
 
 import type { Register } from 'claude-code'
 
@@ -10,6 +11,7 @@ const PHASE = { plugin: 'session-title', key: 'phase' } as const
 const TITLE = { plugin: 'session-title', key: 'title' } as const
 
 const MAX_PROMPT_CHARS = 4000
+const WAIT_MS = 2000
 
 const ASK = `Name this Claude Code session from the user's first request.
 Reply with the title alone: 2 to 6 lowercase words joined by dashes, like
@@ -74,9 +76,9 @@ export const register: Register = on => {
 
     await $.state.set(PHASE, 'pending')
 
-    // A timer outlives this dispatch, so the model call is not cut off when
-    // the hook returns.
-    $.clock.after(0, async () => {
+    // Resolves once the title (or its absence) is recorded in state, so a
+    // late answer is waiting for the next prompt either way.
+    const titled = (async () => {
       const t = await $.model.complete({
         model: 'haiku',
         effort: 'low',
@@ -85,7 +87,7 @@ export const register: Register = on => {
         prompt: ASK + prompt.slice(0, MAX_PROMPT_CHARS),
       })
       const { value: now } = await $.state.get(PHASE)
-      if (now !== 'pending') return
+      if (now !== 'pending') return ''
       const title = t.isAnswered ? clean(t.text) : ''
       if (title) {
         await $.state.set(TITLE, title)
@@ -93,8 +95,12 @@ export const register: Register = on => {
       } else {
         await $.state.set(PHASE, 'none')
       }
-    })
+      return title
+    })()
 
-    return r
+    const title = await Promise.race([titled, $.clock.sleep(WAIT_MS).then(() => '')])
+    if (!title) return r
+    await $.state.set(PHASE, 'done')
+    return { ...r, sessionTitle: title }
   })
 }

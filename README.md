@@ -36,7 +36,7 @@ Then in iTerm2, change your profile's title format to **Session Name** only (Set
 
 ### session-title
 
-Names each new session from its first prompt. Haiku writes a short dashed title (`fix-flaky-login-test`) in the background (no `claude -p`, no wait), and it is applied when the second prompt is submitted. A `/rename`, a resumed session that already has a title, or a slash-command first prompt is left alone.
+Names each new session from its first prompt. Haiku writes a short dashed title (`fix-flaky-login-test`) through the session's own client (no `claude -p`), and the first prompt waits up to 2 seconds for it; a slower title lands on the next prompt. A `/rename`, a resumed session that already has a title, or a slash-command first prompt is left alone.
 
 Load it from a clone by adding the folder to `~/.claude/settings.json`:
 
