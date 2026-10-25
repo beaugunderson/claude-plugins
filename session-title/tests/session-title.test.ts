@@ -36,7 +36,7 @@ test('the title from the first prompt lands on the second', async ($, on) => {
   expect(asked[0]).toContain('the login test keeps failing in CI')
 
   const second = await $.classic.UserPromptSubmit({ prompt: 'try again' })
-  expect(second.sessionTitle).toBe('Fix flaky login test')
+  expect(second.sessionTitle).toBe('fix-flaky-login-test')
 
   const third = await $.classic.UserPromptSubmit({ prompt: 'thanks' })
   await clock.settle()
@@ -85,7 +85,9 @@ test('a slash command first prompt does not start a title', async ($, on) => {
   expect(asked.length).toBe(0)
 })
 
-test('clean strips quoting and labels', async () => {
-  expect(clean('Title: "Fix flaky login test."')).toBe('Fix flaky login test')
-  expect(clean('**Upgrade deps**\nextra line')).toBe('Upgrade deps')
+test('clean dashifies and strips quoting and labels', async () => {
+  expect(clean('Title: "Fix flaky login test."')).toBe('fix-flaky-login-test')
+  expect(clean('**Upgrade deps**\nextra line')).toBe('upgrade-deps')
+  expect(clean("Debug Beau's  iTerm / tab_color")).toBe('debug-beaus-iterm-tab-color')
+  expect(clean('already-dashed-title')).toBe('already-dashed-title')
 })

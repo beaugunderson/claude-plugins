@@ -12,9 +12,9 @@ const TITLE = { plugin: 'session-title', key: 'title' } as const
 const MAX_PROMPT_CHARS = 4000
 
 const ASK = `Name this Claude Code session from the user's first request.
-Reply with the title alone: 2 to 6 words, sentence case, no quotes, no
-trailing punctuation, no "Session" or "Claude" in it. Name the task, not the
-tooling.
+Reply with the title alone: 2 to 6 lowercase words joined by dashes, like
+fix-flaky-login-test. No quotes, no "session" or "claude" in it. Name the
+task, not the tooling.
 
 First request:
 
@@ -23,9 +23,11 @@ First request:
 export const clean = (text: string): string =>
   (text.split('\n')[0] ?? '')
     .replace(/^(title|session title)\s*:\s*/i, '')
-    .replace(/^["'`*]+|["'`*.]+$/g, '')
-    .trim()
+    .toLowerCase()
+    .replace(/['`’]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
     .slice(0, 60)
+    .replace(/^-+|-+$/g, '')
 
 export const register: Register = on => {
   on('classic.SessionStart', async ($, e, next) => {
