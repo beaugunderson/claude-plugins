@@ -33,19 +33,3 @@ iTerm2 tab colors and titles for Claude Code sessions.
 ```
 
 Then in iTerm2, change your profile's title format to **Session Name** only (Settings > Profiles > General > Title) so it doesn't append `(node)`.
-
-### session-title
-
-Names each new session from its first prompt. Haiku writes a short dashed title (`fix-flaky-login-test`) through the session's own client (no `claude -p`), and the first prompt waits up to 2 seconds for it; a slower title lands on the next prompt. A `/rename`, a resumed session that already has a title, or a slash-command first prompt is left alone.
-
-Load it from a clone by adding the folder to `~/.claude/settings.json`:
-
-```json
-{
-  "env": {
-    "CLAUDE_CODE_PLUGIN_DIRS": "~/p/claude-plugins/session-title"
-  }
-}
-```
-
-Tests: `claude plugin test session-title`.
